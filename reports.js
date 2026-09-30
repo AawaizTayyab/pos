@@ -1,0 +1,7 @@
+/* Reports + CSV export */
+function csv(kind){let rows;if(kind=='products')rows=[['Name','SKU','Category','Purchase','Sale','Stock','Min','Supplier'],...DB.get('products').map(p=>[p.name,p.sku,p.cat,p.buy,p.price,p.stock,p.min,p.supplier])];
+ else if(kind=='low')rows=[['Name','SKU','Stock','Min','Status'],...lowList().map(p=>[p.name,p.sku,p.stock,p.min,stockStatus(p)])];
+ else rows=[['Invoice','Date','Customer','Cashier','Payment','Total'],...DB.get('sales').map(s=>[s.id,fdate(s.date),s.customer,s.cashier,s.pay,Math.round(s.total)])];
+ const b=new Blob([rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=kind+'-report.csv';a.click();toast('Export ready','info')}
+function pReports(){const R=[['Sales Report','All completed invoices','sales'],['Product Report','Full product catalogue with prices','products'],['Low Stock Report','Items to restock','low']];
+ return head('Reports','View, print or export business reports')+`<div class="stats">${R.map(r=>`<div class="card"><h3 style="margin-top:0">${r[0]}</h3><p class="mu">${r[1]}</p><div class="acts">${r[2]=='sales'?'<button class="btn" onclick="go(\'sales\')">View</button>':r[2]=='low'?'<button class="btn" onclick="go(\'lowstock\')">View</button><button class="btn" onclick="printDlg(\'lowstock\')">Print</button>':'<button class="btn" onclick="go(\'products\')">View</button>'}<button class="btn pri" onclick="csv('${r[2]}')">Export CSV</button></div></div>`).join('')}</div>`}

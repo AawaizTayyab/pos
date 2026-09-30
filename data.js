@@ -1,0 +1,17 @@
+/* Demo data generator (seeded so it is stable) */
+function rng(s){return()=>(s=(s*16807)%2147483647)/2147483647}
+function seedData(){const r=rng(42),day=864e5;
+const raw='Milk 1L|Dairy|290;Yogurt 500g|Dairy|240;Butter 200g|Dairy|420;Eggs Dozen|Dairy|380;Bread|Bakery|180;Rusk Pack|Bakery|220;Sugar 1kg|Grocery|165;Tea 500g|Grocery|950;Rice 5kg|Grocery|1650;Cooking Oil 3L|Grocery|2100;Flour 10kg|Grocery|1450;Lentils 1kg|Grocery|320;Salt 800g|Grocery|70;Coffee 200g|Beverages|1200;Soft Drink 1.5L|Beverages|190;Water Bottle 1.5L|Beverages|90;Orange Juice 1L|Beverages|350;Energy Drink|Beverages|280;Biscuits|Snacks|60;Chips|Snacks|80;Chocolate Bar|Snacks|150;Noodles|Snacks|55;Soap|Personal Care|110;Shampoo 400ml|Personal Care|620;Toothpaste|Personal Care|260;Toothbrush|Personal Care|130;Face Wash|Personal Care|450;Detergent 1kg|Household|540;Dish Wash Liquid|Household|320;Tissue Box|Household|180;Garbage Bags|Household|240;Floor Cleaner 1L|Household|390'.split(';');
+const sup=['Metro Wholesale','Al-Noor Traders','FreshCo Distributors','Punjab Supplies'];
+const products=raw.map((s,i)=>{const[name,cat,price]=s.split('|'),min=5+Math.floor(r()*15),stock=i%9==0?0:i%3==0?Math.floor(r()*min):min+Math.floor(r()*80),d=new Date(Date.now()-r()*90*day).toISOString();
+ return{id:'p'+(i+1),name,sku:'SKU-'+(1000+i),cat,brand:'Generic',unit:'pcs',buy:Math.round(price*.8),price:+price,disc:0,stock,min,supplier:sup[i%4],desc:'',status:'Active',created:d,updated:d}});
+const customers=['Walk-in','Ali Raza','Sana Malik','Usman Tariq','Hina Aslam','Bilal Ahmed','Ayesha Khan','Zain Ul Abidin','Farah Naz','Imran Shah'].map((n,i)=>({id:'c'+i,name:n,phone:'0300-'+(1234000+i*8137),email:n.toLowerCase().replace(/\W/g,'')+'@mail.com'}));
+const E=[['Admin User','admin@demo.com','admin','Management'],['Sara Manager','manager@demo.com','manager','Operations'],['Ahmed Cashier','cashier@demo.com','cashier','Sales'],['Vera Viewer','viewer@demo.com','viewer','Audit'],['Hassan Stock','hassan@demo.com','inventory','Warehouse'],['Nida Sales','nida@demo.com','cashier','Sales'],['Omar Cashier','omar@demo.com','cashier','Sales'],['Kiran Manager','kiran@demo.com','manager','Operations']];
+const employees=E.map((e,i)=>({id:'e'+i,eid:'EMP-'+(100+i),name:e[0],email:e[1],phone:'0321-'+(5550100+i*311),dept:e[3],role:e[2],pass:e[1].split('@')[0]+'123',status:'Active',last:new Date(Date.now()-r()*3*day).toISOString(),perms:PRESETS[e[2]]}));
+const settings={shop:'ABC General Store',address:'Main Bazaar, Karachi',phone:'+92 300 1234567',email:'info@abcstore.pk',currency:'Rs.',tax:5,paper:'t80',bg:true,thank:'THANK YOU! PLEASE COME AGAIN'};
+const sales=[];for(let k=23;k>=0;k--){const d=new Date();d.setDate(d.getDate()-Math.floor(k/4));d.setHours(9+Math.floor(r()*9),Math.floor(r()*60));
+ const items=[...Array(1+Math.floor(r()*4))].map(()=>{const p=products[Math.floor(r()*products.length)];return{id:p.id,name:p.name,sku:p.sku,price:p.price,qty:1+Math.floor(r()*3)}});
+ const sub=items.reduce((t,i)=>t+i.price*i.qty,0),disc=r()<.3?50:0,tax=(sub-disc)*.05;
+ sales.unshift({id:'INV-'+(10001+23-k),date:d.toISOString(),customer:customers[Math.floor(r()*10)].name,cashier:'Ahmed Cashier',pay:['Cash','Card','Bank Transfer'][Math.floor(r()*3)],items,sub,disc,tax,total:sub-disc+tax,status:'Paid'})}
+DB.set('products',products);DB.set('customers',customers);DB.set('employees',employees);DB.set('settings',settings);DB.set('sales',sales);DB.set('notes',[]);}
+if(!DB.get('products'))seedData();

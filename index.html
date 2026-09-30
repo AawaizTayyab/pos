@@ -1,0 +1,14 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ShopPOS – Shop Management</title>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="responsive.css"><link rel="stylesheet" href="print.css"></head><body>
+<div id="login"><form id="lf" class="card lbox"><div class="logo">◼</div><h2 id="lshop">ShopPOS</h2><p class="mu">Sign in to continue</p>
+<label>Email<input id="le" type="email" required value="admin@demo.com" autocomplete="username"></label>
+<label>Password<input id="lp" type="password" required value="admin123" autocomplete="current-password"></label>
+<label class="chk"><input type="checkbox" id="lr" checked> Remember me</label><div id="lerr" class="err"></div>
+<button class="btn pri" style="width:100%">Login</button>
+<p class="mu sm">Demo: admin@demo.com/admin123 · manager@demo.com/manager123 · cashier@demo.com/cashier123 · viewer@demo.com/viewer123</p></form></div>
+<div id="app" hidden><aside id="side"><div class="brand"><span class="logo">◼</span><span id="shopName"></span></div><nav id="nav" aria-label="Main"></nav>
+<div class="me"><b id="meName"></b><small id="meRole" class="mu"></small><div class="acts"><button class="btn sm" onclick="profile()">Profile</button><button class="btn sm" id="logout">Logout</button></div></div></aside>
+<div class="wrap"><header><button id="burger" class="btn" aria-label="Open menu">☰</button><input id="gsearch" placeholder="Search products…" aria-label="Global search"><span id="date" class="mu"></span>
+<button id="bell" class="btn" aria-label="Notifications">🔔<i id="badge"></i></button><button id="theme" class="btn" aria-label="Toggle theme">◐</button></header><main id="main"></main></div></div>
+<div id="modal" hidden></div><div id="toasts" aria-live="polite"></div><div id="printArea"></div>
+<script src="storage.js"></script><script src="permissions.js"></script><script src="data.js"></script><script src="products.js"></script><script src="pos.js"></script><script src="employees.js"></script><script src="reports.js"></script><script src="print.js"></script><script src="app.js"></script></body></html>

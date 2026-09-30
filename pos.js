@@ -1,0 +1,20 @@
+/* POS screen: product grid, cart, checkout */
+const posList=()=>{const q=(S.pq||'').toLowerCase();return DB.get('products').filter(p=>p.status=='Active'&&(!S.pcat||S.pcat=='All'||p.cat==S.pcat)&&(!q||(p.name+p.sku).toLowerCase().includes(q)))};
+const gridHTML=()=>posList().map(p=>`<button class="pc" ${p.stock<1?'disabled':''} onclick="addCart('${p.id}')"><span class="e">${ico(p)}</span><b>${esc(p.name)}</b><span>${money(p.price)}</span><span class="sm ${p.stock<=p.min?'dn':'mu'}">Stock: ${p.stock}</span></button>`).join('')||'<div class="empty">No products found</div>';
+const posGrid=()=>{$('#pgrid').innerHTML=gridHTML()};
+function calc(){const sub=S.cart.reduce((t,l)=>t+l.price*l.qty,0),disc=Math.min(Math.max(+S.disc||0,0),sub),tax=(sub-disc)*st().tax/100;return{sub,disc,tax,total:sub-disc+tax}}
+const totHTML=()=>{const c=calc();return `<div class="tr"><span>Subtotal</span><span>${money(c.sub)}</span></div><div class="tr"><span>Discount</span><span>- ${money(c.disc)}</span></div><div class="tr"><span>Tax (${st().tax}%)</span><span>${money(c.tax)}</span></div><div class="tr g"><span>Grand Total</span><span>${money(c.total)}</span></div>`};
+function cartHTML(){return (S.cart.length?S.cart.map((l,i)=>`<div class="cl"><div><b>${esc(l.name)}</b><br><span class="sm mu">${money(l.price)} each</span></div><div class="acts"><button class="btn sm" aria-label="Decrease" onclick="qty(${i},-1)">−</button>${l.qty}<button class="btn sm" aria-label="Increase" onclick="qty(${i},1)">+</button></div><b>${money(l.price*l.qty)}</b><button class="btn sm" aria-label="Remove" onclick="S.cart.splice(${i},1);cartRefresh()">✕</button></div>`).join(''):'<div class="empty">Cart is empty</div>')+
+ `<label>Discount (amount)<input type="number" min="0" value="${S.disc||''}" oninput="S.disc=this.value;$('#tot').innerHTML=totHTML()"></label><div id="tot">${totHTML()}</div>
+ <label>Customer<select id="cust">${DB.get('customers').map(c=>`<option>${esc(c.name)}</option>`).join('')}</select></label><label>Payment<select id="pay"><option>Cash</option><option>Card</option><option>Bank Transfer</option><option>Other</option></select></label>
+ <div class="acts" style="margin-top:8px"><button class="btn" onclick="S.cart=[];S.disc=0;cartRefresh()">Clear Cart</button><button class="btn pri" ${can('pos','create')?'':'disabled'} onclick="completeSale()">Complete Sale</button></div>`}
+const cartRefresh=()=>{$('#cart').innerHTML=cartHTML()};
+function addCart(id){const p=DB.get('products').find(x=>x.id==id),l=S.cart.find(x=>x.id==id);if((l?l.qty:0)>=p.stock)return toast('Not enough stock for '+p.name,'warning');
+ l?l.qty++:S.cart.push({id,name:p.name,sku:p.sku,price:p.price,qty:1});cartRefresh()}
+function qty(i,d){const l=S.cart[i],p=DB.get('products').find(x=>x.id==l.id);l.qty+=d;if(l.qty>p.stock){l.qty=p.stock;toast('Stock limit reached','warning')}if(l.qty<1)S.cart.splice(i,1);cartRefresh()}
+function pPos(){const cats=['All',...new Set(DB.get('products').map(p=>p.cat))];
+ return head('POS / Sales','Create a new sale')+`<div class="pos"><div><div class="tools"><input placeholder="Search products or SKU" aria-label="Search products" value="${esc(S.pq||'')}" oninput="S.pq=this.value;posGrid()"></div><div class="chips">${cats.map(c=>`<button class="chip ${(S.pcat||'All')==c?'on':''}" onclick="S.pcat='${c}';go('pos')">${c}</button>`).join('')}</div><div id="pgrid" class="pgrid">${gridHTML()}</div></div><div class="card cartc"><h3 style="margin-top:0">Current Cart</h3><div id="cart">${cartHTML()}</div></div></div>`}
+function completeSale(){if(!S.cart.length)return toast('Cart is empty','warning');const P=DB.get('products'),sales=DB.get('sales'),c=calc();
+ S.cart.forEach(l=>{P.find(p=>p.id==l.id).stock-=l.qty});
+ const sale={id:'INV-'+(10001+sales.length),date:new Date().toISOString(),customer:$('#cust').value,cashier:CU.name,pay:$('#pay').value,items:S.cart.map(l=>({...l})),sub:c.sub,disc:c.disc,tax:c.tax,total:c.total,status:'Paid'};
+ sales.unshift(sale);DB.set('sales',sales);DB.set('products',P);S.cart=[];S.disc=0;notify(`New sale ${sale.id} completed`);toast('Sale completed');go('pos');printDlg('sale',sale.id)}
